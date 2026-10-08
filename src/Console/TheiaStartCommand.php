@@ -28,11 +28,16 @@ class TheiaStartCommand extends Command
     }
 
     /**
-     * Always runs `up -d`, even when theia is already running: it's a no-op
-     * for an up-to-date container, and recreates one whose compose config has
-     * changed - e.g. a new THEIA_PORT, or a container created before theia
-     * became a plugin. Settings and extensions live in storage/plugins/theia/,
-     * so recreating loses nothing.
+     * Always runs `up -d --build`, even when theia is already running: it's a
+     * no-op for an up-to-date container, and recreates one whose compose
+     * config has changed - e.g. a new THEIA_PORT, or a container created
+     * before theia became a plugin. Settings and extensions live in
+     * storage/plugins/theia/, so recreating loses nothing.
+     *
+     * --build because ${NAMESPACE}_theia is also the name the IDE's built-in
+     * Theia gave its image: plain `up` would run that old image rather than
+     * build this one, and it picks up Dockerfile changes after an update.
+     * An unchanged Dockerfile builds from cache in seconds.
      *
      * The first start also installs the default extensions. Xdebug's launch
      * configuration comes with each site's workspace (editor:theia-workspace).
@@ -55,7 +60,7 @@ class TheiaStartCommand extends Command
             $this->getApplication()?->find('editor:theia-extensions')->run(new ArrayInput([]), $output);
         }
 
-        if ($this->compose($output, 'up -d theia') !== 0) {
+        if ($this->compose($output, 'up -d --build theia') !== 0) {
             $io->error('Theia did not start - see above.');
             return Command::FAILURE;
         }

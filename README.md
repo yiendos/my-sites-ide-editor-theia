@@ -68,7 +68,7 @@ installing again; `docker volume rm <project>_conf` removes it once you don't ne
 
 ```
 my-sites-ide CLI (host)
-  |- editor:theia-start / -stop   --> docker compose up -d / stop theia
+  |- editor:theia-start / -stop   --> docker compose up -d --build / stop theia
   |- editor:theia-extensions      --> .vsix files from open-vsx.org, unpacked into storage/plugins/theia/config/plugins/
 
 browser --http://localhost:3001--> theia container
@@ -181,7 +181,7 @@ commit it, or add it to the repository's `.gitignore`.
 
 | Command | What it does |
 |---|---|
-| `editor:theia-start` | `docker compose up -d theia`, then prints the address. Builds the image the first time and installs the default extensions. Also recreates a running container whose compose config has changed (e.g. a new `THEIA_PORT`) |
+| `editor:theia-start` | `docker compose up -d --build theia`, then prints the address. Rebuilds the image when the Dockerfile has changed (from cache otherwise, in seconds) and installs the default extensions the first time. Also recreates a running container whose compose config has changed (e.g. a new `THEIA_PORT`) |
 | `editor:theia-stop` | `docker compose stop theia`, leaving the rest of the IDE running |
 | `editor:theia-workspace <site> [--force]` | Writes `Repos/<site>/<site>.theia-workspace` from the stub, unless the site has one. Runs on the `site-created` hook |
 | `editor:theia-extensions [--force]` | Installs the extensions in the list that aren't there at that version (all of them with `--force`), removes ones taken off the list, and restarts Theia when it's running |
