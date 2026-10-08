@@ -166,6 +166,8 @@ Each new site gets a Theia workspace, `Repos/<site>/<site>.theia-workspace`: the
 (`/home/project/<site>/<site>.theia-workspace`) for a window on just that site. It has:
 
 - **Two folders** - the site, and `Packages/` next to it
+- **Git scanning three folders deep** (`git.repositoryScanMaxDepth`) - so the Source Control view
+  finds the plugin repositories under `Packages/<vendor>/`
 - **Intelephense settings** - PHP 8.4, the site's `vendor/` and IDE helper files
   (`_ide_helper.php`, `_ide_helper_models.php`, `.phpstorm.meta.php`) under `IDE_APP_DIR`
 - **Listen for Xdebug** - mapping `/opt/repos/<site>` and `/opt/Packages` onto those two folders
