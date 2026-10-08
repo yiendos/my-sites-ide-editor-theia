@@ -1,0 +1,21 @@
+{
+    // Debug sites served by the php plugin's fpm container: Run > Start Debugging, then load a
+    // page. Needs XDEBUG_CLIENT_HOST=theia in the IDE's .env. The paths are where fpm sees the
+    // code (/opt/...) and where Theia does (/home/project/...).
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "xdebugSettings": {
+                "max_data": -1
+            },
+            "pathMappings": {
+                "/opt/repos": "${workspaceFolder}",
+                "/opt/Packages": "${workspaceFolder}/Packages"
+            }
+        }
+    ]
+}
