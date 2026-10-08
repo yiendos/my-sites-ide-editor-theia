@@ -83,6 +83,22 @@ final class Paths
     }
 
     /**
+     * The site's application code relative to Repos/ (and /opt/repos in the
+     * php containers) - <site>/<IDE_APP_DIR>, which the IDE sets (deploy by
+     * default, `.` for an app at the repository root, giving just <site>).
+     * Falls back to deploy on an IDE that predates it.
+     *
+     * @param string $site
+     * @return string
+     */
+    public static function siteApp(string $site): string
+    {
+        $app = trim((string) (getenv('IDE_APP_DIR') ?: 'deploy'), '/');
+
+        return $app === '.' || $app === '' ? $site : "{$site}/{$app}";
+    }
+
+    /**
      * A file shipped with this package, e.g. stubs/launch.json
      *
      * @param string $file

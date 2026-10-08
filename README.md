@@ -16,6 +16,7 @@ including ones moving over from the Theia that used to ship inside the IDE.
 - [What's kept between containers](#whats-kept-between-containers)
 - [Extensions](#extensions)
 - [Debugging PHP with Xdebug](#debugging-php-with-xdebug)
+- [Site workspaces](#site-workspaces)
 - [Command reference](#command-reference)
 - [Configuration](#configuration)
 - [What it uses from the IDE](#what-it-uses-from-the-ide)
@@ -156,12 +157,32 @@ are in Theia:
 To go back to debugging in an editor on the host, set `XDEBUG_CLIENT_HOST=host.docker.internal`
 (the php plugin's default).
 
+## Site workspaces
+
+Each new site gets a Theia workspace, `Repos/<site>/<site>.theia-workspace`: the plugin hooks
+`editor:theia-workspace` to the IDE's `site-created` event, so `ide:create-site` and
+`ide:repo-clone` write it. Open it with File > Open Workspace
+(`/home/project/<site>/<site>.theia-workspace`) for a window on just that site. It has:
+
+- **Two folders** - the site, and `Packages/` next to it
+- **Intelephense settings** - PHP 8.4, the site's `vendor/` and IDE helper files
+  (`_ide_helper.php`, `_ide_helper_models.php`, `.phpstorm.meta.php`) under `IDE_APP_DIR`
+- **Listen for Xdebug** - mapping `/opt/repos/<site>` and `/opt/Packages` onto those two folders
+
+It's written from `stubs/workspace.theia-workspace`, with `__PROJECT__` replaced by the site name
+and `__APP_PATH__` by `<site>/<IDE_APP_DIR>`. A site that already has one is left alone. For a
+site that predates the plugin, run `editor:theia-workspace <site>`, adding `--force` to replace one.
+
+The file sits at the root of the site's repository, so a cloned repository shows it as untracked -
+commit it, or add it to the repository's `.gitignore`.
+
 ## Command reference
 
 | Command | What it does |
 |---|---|
 | `editor:theia-start` | `docker compose up -d theia`, then prints the address. Builds the image the first time, installs the default extensions and adds the Xdebug launch configuration. Also recreates a running container whose compose config has changed (e.g. a new `THEIA_PORT`) |
 | `editor:theia-stop` | `docker compose stop theia`, leaving the rest of the IDE running |
+| `editor:theia-workspace <site> [--force]` | Writes `Repos/<site>/<site>.theia-workspace` from the stub, unless the site has one. Runs on the `site-created` hook |
 | `editor:theia-extensions [--force]` | Installs the extensions in the list that aren't there at that version (all of them with `--force`), removes ones taken off the list, and restarts Theia when it's running |
 
 ## Configuration
@@ -184,6 +205,7 @@ Set either in the IDE's root `.env`, which wins over the plugins' defaults, then
 | `storage/plugins/theia/` (`"storage": true`) | settings, extensions, Claude Code and Composer state |
 | the `my-sites-ide` network | reaching `mysql`, `redis` and the rest, and Xdebug reaching `theia` |
 | the php plugin's `XDEBUG_CLIENT_HOST` | pointing Xdebug at Theia |
+| the `site-created` hook and `IDE_APP_DIR` | writing each new site's Theia workspace |
 
 ## Troubleshooting
 

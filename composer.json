@@ -26,7 +26,10 @@
             "env": ".env",
             "env-example": "env-example",
             "services": ["theia"],
-            "storage": true
+            "storage": true,
+            "hooks": {
+                "site-created": ["editor:theia-workspace"]
+            }
         }
     }
 }
