@@ -99,7 +99,7 @@ final class Paths
     }
 
     /**
-     * A file shipped with this package, e.g. stubs/launch.json
+     * A file shipped with this package, e.g. stubs/workspace.theia-workspace
      *
      * @param string $file
      * @return string

@@ -42,8 +42,9 @@ Composer's `post-autoload-dump` hook registers the `editor:theia-*` commands and
 compose service. Theia is opt-in: it doesn't autostart, so either keep `theia` in `APP` (the IDE's
 `env-example` lists it) for `ide:spark` to start it, or run `editor:theia-start` when you want it.
 
-The first `editor:theia-start` builds the `${NAMESPACE}_theia` image (a few minutes), installs the
-default extensions, and adds an Xdebug launch configuration to `Repos/.theia/launch.json`.
+The first `editor:theia-start` builds the `${NAMESPACE}_theia` image (a few minutes) and installs
+the default extensions. Each site gets its own Theia workspace when it's created - see
+[Site workspaces](#site-workspaces).
 
 ## Upgrading from the built-in Theia
 
@@ -142,17 +143,17 @@ published on the host - an editor on your machine keeps 9003 to itself.
    XDEBUG_CLIENT_HOST=theia
    ```
 
-2. In Theia: Run > Start Debugging, choosing **Listen for Xdebug**.
-3. Set a breakpoint and load the page.
+2. In Theia, open the site's workspace (File > Open Workspace,
+   `/home/project/<site>/<site>.theia-workspace`) - it carries the launch configuration.
+3. Run > Start Debugging, choosing **Listen for Xdebug**.
+4. Set a breakpoint and load the page.
 
-`editor:theia-start` adds that configuration as `Repos/.theia/launch.json` the first time, unless
-the workspace already has a `launch.json`. Its `pathMappings` tell the debugger where fpm's paths
-are in Theia:
+The configuration's `pathMappings` tell the debugger where fpm's paths are in Theia:
 
 | fpm / cli | Theia |
 |---|---|
-| `/opt/repos` | `/home/project` |
-| `/opt/Packages` | `/home/project/Packages` |
+| `/opt/repos/<site>` | the `<site>` folder (`/home/project/<site>`) |
+| `/opt/Packages` | the `Packages` folder (`/home/project/Packages`) |
 
 To go back to debugging in an editor on the host, set `XDEBUG_CLIENT_HOST=host.docker.internal`
 (the php plugin's default).
@@ -180,7 +181,7 @@ commit it, or add it to the repository's `.gitignore`.
 
 | Command | What it does |
 |---|---|
-| `editor:theia-start` | `docker compose up -d theia`, then prints the address. Builds the image the first time, installs the default extensions and adds the Xdebug launch configuration. Also recreates a running container whose compose config has changed (e.g. a new `THEIA_PORT`) |
+| `editor:theia-start` | `docker compose up -d theia`, then prints the address. Builds the image the first time and installs the default extensions. Also recreates a running container whose compose config has changed (e.g. a new `THEIA_PORT`) |
 | `editor:theia-stop` | `docker compose stop theia`, leaving the rest of the IDE running |
 | `editor:theia-workspace <site> [--force]` | Writes `Repos/<site>/<site>.theia-workspace` from the stub, unless the site has one. Runs on the `site-created` hook |
 | `editor:theia-extensions [--force]` | Installs the extensions in the list that aren't there at that version (all of them with `--force`), removes ones taken off the list, and restarts Theia when it's running |
@@ -211,8 +212,9 @@ Set either in the IDE's root `.env`, which wins over the plugins' defaults, then
 
 **Breakpoints never hit.** Check `XDEBUG_CLIENT_HOST=theia` is in the root `.env` and the IDE was
 restarted since (`docker compose exec fpm php -i | grep client_host` shows what fpm uses), that
-**Listen for Xdebug** is running in Theia, and that the file is under `Repos/` or `Packages/` - the
-path mappings only cover those.
+**Listen for Xdebug** is running from the site's workspace, and that the file is in that site or
+`Packages/` - the path mappings only cover those. No **Listen for Xdebug** to pick means Theia
+isn't in a site workspace, or the site has none yet: run `editor:theia-workspace <site>`.
 
 **An extension in the list isn't showing.** Theia loads `config/plugins/` when it starts:
 run `editor:theia-extensions` (which restarts it) and reload the browser tab.

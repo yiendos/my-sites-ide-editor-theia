@@ -34,8 +34,8 @@ class TheiaStartCommand extends Command
      * became a plugin. Settings and extensions live in storage/plugins/theia/,
      * so recreating loses nothing.
      *
-     * The first start also installs the default extensions and gives the
-     * workspace an Xdebug launch configuration.
+     * The first start also installs the default extensions. Xdebug's launch
+     * configuration comes with each site's workspace (editor:theia-workspace).
      *
      * @param OutputInterface $output
      * @param InputInterface $input
@@ -55,8 +55,6 @@ class TheiaStartCommand extends Command
             $this->getApplication()?->find('editor:theia-extensions')->run(new ArrayInput([]), $output);
         }
 
-        $this->launchConfiguration($io);
-
         if ($this->compose($output, 'up -d theia') !== 0) {
             $io->error('Theia did not start - see above.');
             return Command::FAILURE;
@@ -74,26 +72,5 @@ class TheiaStartCommand extends Command
         }
 
         return Command::SUCCESS;
-    }
-
-    /**
-     * Copies the Xdebug "Listen for Xdebug" configuration into Repos/.theia/,
-     * unless the workspace already has a launch.json (.theia/ or .vscode/)
-     *
-     * @param SymfonyStyle $io
-     * @return void
-     */
-    private function launchConfiguration(SymfonyStyle $io): void
-    {
-        if (is_file(Paths::workspace('.theia/launch.json')) || is_file(Paths::workspace('.vscode/launch.json'))) {
-            return;
-        }
-
-        if (!is_dir(Paths::workspace('.theia'))) {
-            mkdir(Paths::workspace('.theia'), 0755, true);
-        }
-
-        copy(Paths::package('stubs/launch.json'), Paths::workspace('.theia/launch.json'));
-        $io->writeln('Added the Xdebug launch configuration - ' . Paths::relative(Paths::workspace('.theia/launch.json')));
     }
 }
