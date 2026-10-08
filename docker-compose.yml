@@ -1,0 +1,23 @@
+services:
+    theia:
+        image: ${NAMESPACE}_theia:latest
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "${THEIA_PORT:-3001}:3000"
+        # no 9003 published - Xdebug in fpm reaches theia:9003 over the IDE network
+        # (XDEBUG_CLIENT_HOST=theia), which leaves 9003 free for an editor on the host
+        environment:
+            # everything worth keeping lives in storage/plugins/theia/ ("storage": true in
+            # composer.json mounts it at /storage) - the rest of the image is replaced on rebuild
+            THEIA_CONFIG_DIR: /storage/config
+            CLAUDE_CONFIG_DIR: /storage/claude
+            COMPOSER_HOME: /storage/composer
+        volumes:
+            - ${IDE_ROOT}/Repos:/home/project
+            - ${IDE_ROOT}/Packages:/home/project/Packages
+        networks:
+            - my-sites-ide
+
+    # opt-in: add theia to APP, or run editor:theia-start

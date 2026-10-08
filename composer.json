@@ -1,0 +1,32 @@
+{
+    "name": "yiendos/my-sites-ide-editor-theia",
+    "description": "Theia IDE in the browser - with PHP, Composer, the Laravel installer, Claude Code and Xdebug debugging - for my-sites-ide",
+    "type": "my-sites-ide-plugin",
+    "license": "MIT",
+    "keywords": ["my-sites-ide", "theia", "editor", "ide", "xdebug"],
+    "authors": [
+        {
+            "name": "Paul Yiend",
+            "email": "yiendos@sbmatrix.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Yiendos\\MySitesIde\\Editor\\Theia\\": "src/"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "symfony/console": "^7.3"
+    },
+    "extra": {
+        "my-sites-ide": {
+            "commands": "src/Console",
+            "compose": "docker-compose.yml",
+            "env": ".env",
+            "env-example": "env-example",
+            "services": ["theia"],
+            "storage": true
+        }
+    }
+}
