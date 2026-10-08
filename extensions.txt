@@ -1,0 +1,7 @@
+# Extensions editor:theia-extensions installs from Open VSX (https://open-vsx.org), one
+# <namespace>.<name>@<version> per line. Copy this file to storage/plugins/theia/extensions.txt
+# to use your own list - anything else can be installed from Theia's Extensions panel.
+xdebug.php-debug@1.40.2
+bmewburn.vscode-intelephense-client@1.18.5
+laravel.vscode-laravel@2.0.1
+EditorConfig.EditorConfig@0.18.2
