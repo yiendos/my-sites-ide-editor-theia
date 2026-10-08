@@ -1,0 +1,7 @@
+# [theia]
+# The host port for Theia's web UI, default in this plugin's .env (http://localhost:3001).
+# Run `php my-sites-ide editor:theia-start` after changing it.
+#THEIA_PORT=3001
+# Xdebug in the php plugin's fpm/cli containers connects to the editor named here - set it to
+# theia to debug in Theia (the php plugin's default is host.docker.internal, an editor on the host)
+#XDEBUG_CLIENT_HOST=theia
