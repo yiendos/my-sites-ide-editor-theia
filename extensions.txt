@@ -5,3 +5,4 @@ xdebug.php-debug@1.40.2
 bmewburn.vscode-intelephense-client@1.18.5
 laravel.vscode-laravel@2.0.1
 EditorConfig.EditorConfig@0.18.2
+Anthropic.claude-code@2.1.294

@@ -81,8 +81,10 @@ class TheiaExtensionsCommand extends Command
                 continue;
             }
 
-            if (!$this->install("{$namespace}/{$name}/{$version}/file/{$id}-{$version}.vsix", "{$directory}/{$id}")) {
-                $io->writeln("  <error>{$id}@{$version} - download failed</error>");
+            $url = $this->downloadUrl($namespace, $name, $version);
+
+            if ($url === null || !$this->install($url, "{$directory}/{$id}")) {
+                $io->writeln("  <error>{$id}@{$version} - " . ($url === null ? "no build for {$this->platform()}" : 'download failed') . '</error>');
                 $failed++;
                 continue;
             }
@@ -166,24 +168,61 @@ class TheiaExtensionsCommand extends Command
     }
 
     /**
-     * Downloads a .vsix from Open VSX and unpacks it in place of whatever
-     * version was there - only once the download is complete
+     * Where to download an extension version from. Most extensions have one
+     * universal .vsix; ones with native code (e.g. Anthropic.claude-code) have
+     * one per platform, and Theia needs the build for the container - Linux on
+     * the Docker host's architecture, not the machine running this command.
      *
-     * @param string $path
+     * @param string $namespace
+     * @param string $name
+     * @param string $version
+     * @return string|null null when the version doesn't exist, or has no build for the container
+     */
+    private function downloadUrl(string $namespace, string $name, string $version): ?string
+    {
+        $context = stream_context_create(['http' => ['timeout' => 30, 'ignore_errors' => false]]);
+        $metadata = json_decode((string) @file_get_contents(self::OPEN_VSX . "/{$namespace}/{$name}/{$version}", false, $context), true);
+        $downloads = is_array($metadata) ? ($metadata['downloads'] ?? []) : [];
+
+        return $downloads['universal'] ?? $downloads[$this->platform()] ?? null;
+    }
+
+    /**
+     * The Open VSX target platform of the container, e.g. linux-arm64
+     *
+     * @return string
+     */
+    private function platform(): string
+    {
+        static $platform = null;
+
+        if ($platform === null) {
+            $arch = trim((string) shell_exec("docker version --format '{{.Server.Arch}}' 2>/dev/null")) ?: php_uname('m');
+            $platform = 'linux-' . (in_array($arch, ['arm64', 'aarch64'], true) ? 'arm64' : 'x64');
+        }
+
+        return $platform;
+    }
+
+    /**
+     * Downloads a .vsix and unpacks it in place of whatever version was
+     * there - only once the download is complete
+     *
+     * @param string $url
      * @param string $folder
      * @return bool
      */
-    private function install(string $path, string $folder): bool
+    private function install(string $url, string $folder): bool
     {
-        $context = stream_context_create(['http' => ['timeout' => 60, 'ignore_errors' => false]]);
-        $body = @file_get_contents(self::OPEN_VSX . "/{$path}", false, $context);
+        // streamed to a temporary file - some .vsix files (e.g. Claude Code's, with its
+        // native binary) are bigger than PHP's memory limit
+        $context = stream_context_create(['http' => ['timeout' => 120, 'ignore_errors' => false]]);
+        $vsix = tempnam(sys_get_temp_dir(), 'vsix');
 
-        if ($body === false || $body === '') {
+        if (!@copy($url, $vsix, $context) || filesize($vsix) === 0) {
+            unlink($vsix);
             return false;
         }
-
-        $vsix = tempnam(sys_get_temp_dir(), 'vsix');
-        file_put_contents($vsix, $body);
 
         $zip = new ZipArchive();
         if ($zip->open($vsix) !== true) {
@@ -193,6 +232,19 @@ class TheiaExtensionsCommand extends Command
 
         $this->remove($folder);
         $unpacked = $zip->extractTo($folder);
+
+        // extractTo drops Unix permissions - put back the executable bit, which
+        // bundled native binaries (e.g. Claude Code's) need to run
+        for ($index = 0; $unpacked && $index < $zip->numFiles; $index++) {
+            $zip->getExternalAttributesIndex($index, $system, $attributes);
+            $mode = ($attributes >> 16) & 0777;
+            $file = "{$folder}/" . $zip->getNameIndex($index);
+
+            if ($system === ZipArchive::OPSYS_UNIX && ($mode & 0111) && is_file($file)) {
+                chmod($file, $mode);
+            }
+        }
+
         $zip->close();
         unlink($vsix);
 

@@ -110,11 +110,16 @@ default list, in `extensions.txt`:
 | `bmewburn.vscode-intelephense-client` | PHP completion, go-to-definition, diagnostics |
 | `laravel.vscode-laravel` | the official Laravel extension - completion and go-to for routes, views, config, env and Eloquent |
 | `EditorConfig.EditorConfig` | follows a site's `.editorconfig` |
+| `Anthropic.claude-code` | Claude Code in a side panel. It shares its login and settings with the `claude` CLI in Theia's terminal (`CLAUDE_CONFIG_DIR`) |
 
 To change the list, copy `extensions.txt` to `storage/plugins/theia/extensions.txt` and edit it -
 one `<namespace>.<name>@<version>` per line. `config/plugins/` belongs to the command: a changed
 version replaces the extension, and one taken off the list is removed. It restarts Theia when it's
 running, so reload the browser tab afterwards. Unpacking needs PHP's `zip` extension on the host.
+
+Extensions with native code, such as Claude Code, have a separate build per platform: the command
+asks Docker for its architecture and installs the `linux-arm64` or `linux-x64` build, whichever
+matches the container rather than your machine. Claude Code's is about 250 MB unpacked.
 
 Anything else, install from Theia's Extensions panel - it's kept in `config/` too, and the command
 leaves it alone. Some that suit Laravel work:
